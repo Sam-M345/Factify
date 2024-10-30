@@ -11,7 +11,7 @@ body {
   padding: 48px 64px;
 }
 
-/* Main layout */
+/* MAIN LAYOUT */
 .container {
   max-width: 1500px;
   margin: 0 auto;
@@ -19,20 +19,9 @@ body {
 
 .header {
   margin-bottom: 40px;
-
-  padding: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.fact-form {
-  background-color: #44403c;
-  margin-bottom: 40px;
-  padding: 16px 32px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
 }
 
 .main {
@@ -41,7 +30,13 @@ body {
   gap: 48px;
 }
 
-/* Elements */
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ELEMENTS */
 
 .logo {
   display: flex;
@@ -58,7 +53,6 @@ h1 {
   font-size: 42px;
   text-transform: uppercase;
   font-family: "Coiny", sans-serif;
-  color: #fafaf9;
   line-height: 1;
   margin-top: 6px;
 }
@@ -70,15 +64,23 @@ h1 {
 .fact {
   font-size: 20px;
   line-height: 1.4;
-  color: #fafaf9;
   background-color: #44403c;
   margin-bottom: 16px;
   padding: 16px 24px;
   letter-spacing: -1px;
+  border-radius: 16px;
+
   display: flex;
   align-items: center;
-
   gap: 24px;
+}
+
+@media (max-width: 1200px) {
+  .fact {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+  }
 }
 
 .tag {
@@ -94,6 +96,7 @@ h1 {
 .vote-buttons {
   margin-left: auto;
   flex-shrink: 0;
+
   display: flex;
   gap: 8px;
 }
@@ -147,8 +150,7 @@ ul {
 }
 
 .btn:hover {
-  transform: scale(110%);
-  rotate: -2deg;
+  transform: scale(110%) rotate(-2deg);
 }
 
 .btn-large {
@@ -164,6 +166,17 @@ ul {
 .btn-category {
   width: 100%;
   background-image: none;
+}
+
+/* FORM */
+.fact-form {
+  background-color: #44403c;
+  margin-bottom: 40px;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-radius: 16px;
 }
 
 .fact-form input,
@@ -190,4 +203,20 @@ ul {
   font-weight: 600;
   font-size: 18px;
   margin-right: 18px;
+}
+
+@media (max-width: 1000px) {
+  body {
+    padding: 32px 48px;
+  }
+
+  .fact-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fact-form input,
+  .fact-form select {
+    width: auto;
+  }
 }
