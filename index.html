@@ -34,12 +34,17 @@
       <form class="fact-form hidden">
         <input type="text" placeholder="Share a fact with the world..." />
         <span>200</span>
-        <input type="text" placeholder="Trustworthy source..." />
+        <input type="text" placeholder="(Source) https://www.example.com" />
         <select>
           <option value="">Choose category:</option>
           <option value="technology">Technology</option>
           <option value="science">Science</option>
           <option value="finance">Finance</option>
+          <option value="society">Society</option>
+          <option value="entertainment">Entertainment</option>
+          <option value="health">Health</option>
+          <option value="history">History</option>
+          <option value="news">News</option>
         </select>
         <button class="btn btn-large">Post</button>
       </form>
@@ -64,6 +69,54 @@
                 style="background-color: #16a34a"
               >
                 Science
+              </button>
+            </li>
+            <li class="category">
+              <button
+                class="btn btn-category"
+                style="background-color: #ef4444"
+              >
+                Finance
+              </button>
+            </li>
+            <li class="category">
+              <button
+                class="btn btn-category"
+                style="background-color: #eab308"
+              >
+                Society
+              </button>
+            </li>
+            <li class="category">
+              <button
+                class="btn btn-category"
+                style="background-color: #db2777"
+              >
+                Entertainment
+              </button>
+            </li>
+            <li class="category">
+              <button
+                class="btn btn-category"
+                style="background-color: #14b8a6"
+              >
+                Health
+              </button>
+            </li>
+            <li class="category">
+              <button
+                class="btn btn-category"
+                style="background-color: #f97316"
+              >
+                History
+              </button>
+            </li>
+            <li class="category">
+              <button
+                class="btn btn-category"
+                style="background-color: #8b5cf6"
+              >
+                News
               </button>
             </li>
           </ul>
@@ -116,6 +169,6 @@
       </main>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
   </body>
 </html>

@@ -1,37 +1,16 @@
-const initialFacts = [
-  {
-    id: 1,
-    text: "React is being developed by Meta (formerly facebook)",
-    source: "https://opensource.fb.com/",
-    category: "technology",
-    votesInteresting: 24,
-    votesMindblowing: 9,
-    votesFalse: 4,
-    createdIn: 2021,
-  },
-  {
-    id: 2,
-    text: "Millennial dads spend 3 times as much time with their kids than their fathers spent with them. In 1982, 43% of fathers had never changed a diaper. Today, that number is down to 3%",
-    source:
-      "https://www.mother.ly/parenting/millennial-dads-spend-more-time-with-their-kids",
-    category: "society",
-    votesInteresting: 11,
-    votesMindblowing: 2,
-    votesFalse: 0,
-    createdIn: 2019,
-  },
-  {
-    id: 3,
-    text: "Lisbon is the capital of Portugal",
-    source: "https://en.wikipedia.org/wiki/Lisbon",
-    category: "society",
-    votesInteresting: 8,
-    votesMindblowing: 3,
-    votesFalse: 1,
-    createdIn: 2015,
-  },
-];
+import config from "./config.js";
 
+// DOM Elements - declare these only once at the top
+const factsList = document.querySelector(".facts-list");
+const categoryButtons = document.querySelectorAll(".btn-category");
+const btnAllCategories = document.querySelector(".btn-all-categories");
+const form = document.querySelector(".fact-form");
+const textInput = form.querySelector('input[type="text"]');
+const sourceInput = form.querySelector('input[type="text"]:nth-child(3)');
+const categorySelect = form.querySelector("select");
+const btnShare = document.querySelector(".btn-open");
+
+// Categories array
 const CATEGORIES = [
   { name: "technology", color: "#3b82f6" },
   { name: "science", color: "#16a34a" },
@@ -43,37 +22,143 @@ const CATEGORIES = [
   { name: "news", color: "#8b5cf6" },
 ];
 
-// Selecting DOM elements
-const btn = document.querySelector(".btn-open");
-const form = document.querySelector(".fact-form");
-const factsList = document.querySelector(".facts-list");
+// Event Listeners
+btnAllCategories.addEventListener("click", () => {
+  console.log("All categories clicked");
+  loadFacts("all");
+});
 
-// Create DOM elements: Render facts in list
-factsList.innerHTML = "";
+categoryButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const selectedCategory = button.textContent.toLowerCase().trim();
+    console.log("Category clicked:", selectedCategory);
+    loadFacts(selectedCategory);
+  });
+});
 
-// Load data from Supabase
-loadFacts();
+// Event Listeners for voting buttons
+const VOTE_TYPES = {
+  INTERESTING: "votesInteresting",
+  MINDBLOWING: "votesMindblowing",
+  FALSE: "votesFalse",
+};
 
-async function loadFacts() {
+function createFactsList(dataArray) {
+  const htmlArr = dataArray.map(
+    (fact) => `<li class="fact">
+      <p>
+        ${fact.text}
+        <a class="source" href="${fact.source}" target="_blank">(Source)</a>
+      </p>
+      <span class="tag" style="background-color: ${
+        CATEGORIES.find((cat) => cat.name === fact.category)?.color
+      }">${fact.category}</span>
+      <div class="vote-buttons">
+        <button class="vote-button" data-vote-type="${
+          VOTE_TYPES.INTERESTING
+        }" data-fact-id="${fact.id}">
+          👍 ${fact.votesInteresting || 0}
+        </button>
+        <button class="vote-button" data-vote-type="${
+          VOTE_TYPES.MINDBLOWING
+        }" data-fact-id="${fact.id}">
+          🤯 ${fact.votesMindblowing || 0}
+        </button>
+        <button class="vote-button" data-vote-type="${
+          VOTE_TYPES.FALSE
+        }" data-fact-id="${fact.id}">
+          ⛔️ ${fact.votesFalse || 0}
+        </button>
+      </div>
+    </li>`
+  );
+
+  factsList.innerHTML = htmlArr.join("");
+
+  // Add event listeners to all vote buttons
+  document.querySelectorAll(".vote-button").forEach((button) => {
+    button.addEventListener("click", handleVote);
+  });
+}
+
+async function handleVote(e) {
+  const button = e.target;
+  const factId = button.dataset.factId;
+  const voteType = button.dataset.voteType;
+
   try {
-    const res = await fetch(
-      "https://otxttghfmfctnyechren.supabase.co/rest/v1/facts",
-      {
-        headers: {
-          apikey:
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90eHR0Z2hmbWZjdG55ZWNocmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAyNjE2MzksImV4cCI6MjA0NTgzNzYzOX0.6dThND7v2ejcD8u0UIdO6NtVYfpZUvJ96uHAwvJ-1Ao",
-          authorization:
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90eHR0Z2hmbWZjdG55ZWNocmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAyNjE2MzksImV4cCI6MjA0NTgzNzYzOX0.6dThND7v2ejcD8u0UIdO6NtVYfpZUvJ96uHAwvJ-1Ao",
-          "Content-Type": "application/json",
-          Prefer: "return=minimal",
-        },
-      }
-    );
-    if (!res.ok) {
-      throw new Error("Failed to fetch facts");
+    // Get current vote count
+    const res = await fetch(`${config.supabaseUrl}?id=eq.${factId}`, {
+      headers: {
+        apikey: config.supabaseKey,
+        authorization: `Bearer ${config.supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+    });
+    const [fact] = await res.json();
+
+    // Increment the vote
+    const updateData = {
+      [voteType]: (fact[voteType] || 0) + 1,
+    };
+
+    // Update the vote in the database
+    const updateRes = await fetch(`${config.supabaseUrl}?id=eq.${factId}`, {
+      method: "PATCH",
+      headers: {
+        apikey: config.supabaseKey,
+        authorization: `Bearer ${config.supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(updateData),
+    });
+
+    if (updateRes.ok) {
+      // Update the button text immediately
+      const currentCount = fact[voteType] || 0;
+      const newCount = currentCount + 1;
+      const emoji =
+        voteType === VOTE_TYPES.INTERESTING
+          ? "👍"
+          : voteType === VOTE_TYPES.MINDBLOWING
+          ? "🤯"
+          : "⛔️";
+      button.textContent = `${emoji} ${newCount}`;
     }
+  } catch (error) {
+    console.error("Error updating vote:", error);
+    alert("There was an error updating the vote. Please try again.");
+  }
+}
+
+// Functions
+async function loadFacts(category = "all") {
+  try {
+    console.log("Loading facts for category:", category);
+    const res = await fetch(config.supabaseUrl, {
+      headers: {
+        apikey: config.supabaseKey,
+        authorization: `Bearer ${config.supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch facts");
     const data = await res.json();
-    createFactsList(data);
+    console.log("Fetched data:", data);
+
+    // Filter the facts based on category
+    const filteredData =
+      category === "all"
+        ? data
+        : data.filter((fact) => fact.category.toLowerCase() === category);
+    console.log("Filtered data:", filteredData);
+
+    // Create new fact elements
+    createFactsList(filteredData);
   } catch (error) {
     console.error("Error loading facts:", error);
     factsList.innerHTML =
@@ -81,221 +166,94 @@ async function loadFacts() {
   }
 }
 
-function createFactsList(dataArray) {
-  const htmlArr = dataArray.map((fact) => {
-    // Find the category, with a fallback if not found
-    const categoryObject = CATEGORIES.find(
-      (cat) => cat.name === fact.category
-    ) || { color: "#888888", name: "unknown" }; // Default fallback
-
-    return `<li class="fact">
-        <p>
-          ${fact.text}
-          <a class="source" href="${fact.source}" target="_blank">(Source)</a>
-        </p>
-        <span class="tag" style="background-color: ${categoryObject.color}">
-          ${fact.category}
-        </span>
-      </li>`;
-  });
-  const html = htmlArr.join("");
-  factsList.insertAdjacentHTML("afterbegin", html);
-}
+// Initial load
+loadFacts("all");
 
 // Toggle form visibility
-btn.addEventListener("click", function () {
+btnShare.addEventListener("click", function () {
   if (form.classList.contains("hidden")) {
     form.classList.remove("hidden");
-    btn.textContent = "Close";
+    btnShare.textContent = "Close";
   } else {
     form.classList.add("hidden");
-    btn.textContent = "Share a fact";
+    btnShare.textContent = "Share a fact";
   }
 });
 
-console.log([7, 64, 6, -23, 11].filter((el) => el > 10));
-console.log([7, 64, 6, -23, 11].find((el) => el > 10));
+// Handle form submission
+form.addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-/*
-let votesInteresting = 23;
-let votesMindlowing = 5;
-const text = "Lisbon is the capital of Portugal";
+  // Get the input values
+  const text = textInput.value;
+  let source = sourceInput.value;
+  const category = categorySelect.value;
 
-votesInteresting = votesInteresting + 1;
-votesInteresting++;
-console.log(votesInteresting);
+  // Basic validation
+  if (text.length > 200) {
+    alert("Text must be less than 200 characters");
+    return;
+  }
 
-let totalUpvotes = votesInteresting + votesMindlowing;
-console.log("Upvotes:", totalUpvotes);
+  // Format source URL if needed
+  if (!source.startsWith("(Source)")) {
+    source = `(Source) ${source}`;
+  }
 
-let votesFalse = 4;
-const isCorrect = votesFalse < totalUpvotes;
-console.log(isCorrect);
+  // Validate URL - check if it contains https://www.
+  if (!source.includes("https://www.")) {
+    alert("Please provide a valid source URL starting with https://www.");
+    return;
+  }
 
-console.log(parseInt("24.533ccc"));
-*/
+  if (!text || !source || !category) {
+    alert("Please fill in all fields");
+    return;
+  }
 
-/*
-function calcFactAge(year) {
-  const currentYear = new Date().getFullYear();
-  const age = currentYear - year;
-
-  if (age >= 0) return age;
-  else return `Impossible year. Year needs to be less or equal ${currentYear}`;
-}
-
-const age1 = calcFactAge(2015);
-console.log(age1);
-console.log(calcFactAge(2020));
-console.log(calcFactAge(2037));
-
-// const calcFactAge2 = (year) => 2022 - year;
-const calcFactAge2 = (year) =>
-  year <= new Date().getFullYear()
-    ? new Date().getFullYear() - year
-    : `Impossible year. Year needs to be less or equal ${new Date().getFullYear()}`;
-
-console.log(calcFactAge2(2015));
-console.log(calcFactAge2(2037));
-*/
-
-/*
-let votesInteresting = 20;
-let votesMindlowing = 5;
-
-if (votesInteresting === votesMindlowing) {
-  alert("This fact is equally interesting and mindblowing");
-} else if (votesInteresting > votesMindlowing) {
-  console.log("Intersting fact!");
-} else if (votesInteresting < votesMindlowing) {
-  console.log("Mindblowing fact!!");
-}
-
-// falsy values: 0, '', null, undefined
-// truthy value: everything else...
-if (votesMindlowing) {
-  console.log("MINDBLOWING FACT!!!");
-} else {
-  console.log("Not so special...");
-}
-
-let votesFalse = 7;
-const totalUpvotes = votesInteresting + votesMindlowing;
-
-const message =
-  totalUpvotes > votesFalse
-    ? "The fact is true"
-    : "Might be false, check more sources...";
-// alert(message);
-
-const text = "Lisbon is the capital of Portugal";
-const upperText = text.toUpperCase();
-console.log(upperText);
-
-const str = `The current fact is "${text}". It is ${calcFactAge(
-  2015
-)} years old. It is probably ${
-  totalUpvotes > votesFalse ? "correct" : "not true"
-}.`;
-console.log(str);
-*/
-
-/*
-const fact = ["Lisbon is the capital of Portugal", 2015, true];
-console.log(fact[2]);
-console.log(fact.length);
-console.log(fact[fact.length - 1]);
-
-const [text, createdIn] = fact;
-const newFact = [...fact, "society"];
-console.log(newFact);
-
-const factObj = {
-  text: "Lisbon is the capital of Portugal",
-  category: "society",
-  createdIn: 2015,
-  isCorrect: true,
-  createSummary: function () {
-    return `The fact "${
-      this.text
-    }" is from the category ${this.category.toUpperCase()}`;
-  },
-};
-
-console.log(factObj.text);
-console.log(factObj["text"]);
-
-const { category, isCorrect } = factObj;
-console.log(category);
-console.log(factObj.createSummary());
-
-// [2, 4, 6, 8].forEach(function (el) {
-//   console.log(el);
-// });
-
-// const times10 = [2, 4, 6, 8].map(function (el) {
-//   return el * 10;
-// });
-const times10 = [2, 4, 6, 8].map((el) => el * 10);
-console.log(times10);
-
-const CATEGORIES = [
-  { name: "technology", color: "#3b82f6" },
-  { name: "science", color: "#16a34a" },
-  { name: "finance", color: "#ef4444" },
-  { name: "society", color: "#eab308" },
-  { name: "entertainment", color: "#db2777" },
-  { name: "health", color: "#14b8a6" },
-  { name: "history", color: "#f97316" },
-  { name: "news", color: "#8b5cf6" },
-];
-
-const allCategories = CATEGORIES.map((el) => el.name);
-console.log(allCategories);
-
-const initialFacts = [
-  {
-    id: 1,
-    text: "React is being developed by Meta (formerly facebook)",
-    source: "https://opensource.fb.com/",
-    category: "technology",
-    votesInteresting: 24,
-    votesMindblowing: 9,
-    votesFalse: 4,
-    createdIn: 2021,
-  },
-  {
-    id: 2,
-    text: "Millennial dads spend 3 times as much time with their kids than their fathers spent with them. In 1982, 43% of fathers had never changed a diaper. Today, that number is down to 3%",
-    source:
-      "https://www.mother.ly/parenting/millennial-dads-spend-more-time-with-their-kids",
-    category: "society",
-    votesInteresting: 11,
-    votesMindblowing: 2,
+  // Create the new fact object
+  const fact = {
+    text,
+    source,
+    category,
+    votesInteresting: 0,
+    votesMindblowing: 0,
     votesFalse: 0,
-    createdIn: 2019,
-  },
-  {
-    id: 3,
-    text: "Lisbon is the capital of Portugal",
-    source: "https://en.wikipedia.org/wiki/Lisbon",
-    category: "society",
-    votesInteresting: 8,
-    votesMindblowing: 3,
-    votesFalse: 1,
-    createdIn: 2015,
-  },
-];
+  };
 
-function calcFactAge(year) {
-  const currentYear = new Date().getFullYear();
-  const age = currentYear - year;
+  try {
+    // Send to Supabase
+    const res = await fetch(config.supabaseUrl, {
+      method: "POST",
+      headers: {
+        apikey: config.supabaseKey,
+        authorization: `Bearer ${config.supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(fact),
+    });
 
-  if (age >= 0) return age;
-  else return `Impossible year. Year needs to be less or equal ${currentYear}`;
-}
+    if (!res.ok) throw new Error("Error creating fact");
 
-const factAges = initialFacts.map((el) => calcFactAge(el.createdIn));
-console.log(factAges);
-console.log(factAges.join("-"));
-*/
+    // Reset form
+    textInput.value = "";
+    sourceInput.value = "";
+    categorySelect.value = "";
+    form.classList.add("hidden");
+    btnShare.textContent = "Share a fact";
+
+    // Reload facts to show the new one
+    loadFacts("all");
+  } catch (error) {
+    console.error("Error creating fact:", error);
+    alert("There was an error creating your fact. Please try again.");
+  }
+});
+
+// Add character counter for text input
+textInput.addEventListener("input", function () {
+  const remainingChars = 200 - textInput.value.length;
+  const counterSpan = form.querySelector("span");
+  counterSpan.textContent = remainingChars;
+});
