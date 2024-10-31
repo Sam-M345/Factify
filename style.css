@@ -47,13 +47,13 @@ body {
 .logo {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
+  gap: 1.6rem;
   flex-shrink: 0;
 }
 
 .logo img {
-  height: 48px;
-  width: 48px;
+  height: 68px;
+  width: 68px;
 }
 
 .title-container {
@@ -289,4 +289,11 @@ ul {
 
 .btn-open {
   margin-left: auto;
+}
+
+/* Update the gap between category buttons */
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }

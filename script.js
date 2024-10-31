@@ -157,6 +157,11 @@ async function loadFacts(category = "all") {
         : data.filter((fact) => fact.category.toLowerCase() === category);
     console.log("Filtered data:", filteredData);
 
+    // Sort facts by creation date in descending order (newest first)
+    filteredData.sort((a, b) => {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
     // Create new fact elements
     createFactsList(filteredData);
   } catch (error) {
