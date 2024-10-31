@@ -55,39 +55,49 @@ factsList.innerHTML = "";
 loadFacts();
 
 async function loadFacts() {
-  const res = await fetch(
-    "https://otxttghfmfctnyechren.supabase.co/rest/v1/facts",
-    {
-      headers: {
-        apikey:
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90eHR0Z2hmbWZjdG55ZWNocmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAyNjE2MzksImV4cCI6MjA0NTgzNzYzOX0.6dThND7v2ejcD8u0UIdO6NtVYfpZUvJ96uHAwvJ-1Ao",
-        authorization:
-          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90eHR0Z2hmbWZjdG55ZWNocmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAyNjE2MzksImV4cCI6MjA0NTgzNzYzOX0.6dThND7v2ejcD8u0UIdO6NtVYfpZUvJ96uHAwvJ-1Ao",
-      },
+  try {
+    const res = await fetch(
+      "https://otxttghfmfctnyechren.supabase.co/rest/v1/facts",
+      {
+        headers: {
+          apikey:
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90eHR0Z2hmbWZjdG55ZWNocmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAyNjE2MzksImV4cCI6MjA0NTgzNzYzOX0.6dThND7v2ejcD8u0UIdO6NtVYfpZUvJ96uHAwvJ-1Ao",
+          authorization:
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90eHR0Z2hmbWZjdG55ZWNocmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAyNjE2MzksImV4cCI6MjA0NTgzNzYzOX0.6dThND7v2ejcD8u0UIdO6NtVYfpZUvJ96uHAwvJ-1Ao",
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+      }
+    );
+    if (!res.ok) {
+      throw new Error("Failed to fetch facts");
     }
-  );
-  const data = await res.json();
-  createFactsList(data);
+    const data = await res.json();
+    createFactsList(data);
+  } catch (error) {
+    console.error("Error loading facts:", error);
+    factsList.innerHTML =
+      "<li>Error loading facts. Please try again later.</li>";
+  }
 }
 
 function createFactsList(dataArray) {
-  // factsList.insertAdjacentHTML("afterbegin", "<li>Jonas</li>");
+  const htmlArr = dataArray.map((fact) => {
+    // Find the category, with a fallback if not found
+    const categoryObject = CATEGORIES.find(
+      (cat) => cat.name === fact.category
+    ) || { color: "#888888", name: "unknown" }; // Default fallback
 
-  const htmlArr = dataArray.map(
-    (fact) => `<li class="fact">
-    <p>
-    ${fact.text}
-      <a
-        class="source"
-        href="${fact.source}"
-        target="_blank"
-      >(Source)</a>
-    </p>
-    <span class="tag" style="background-color: ${
-      CATEGORIES.find((cat) => cat.name === fact.category).color
-    }">${fact.category}</span>
-  </li>`
-  );
+    return `<li class="fact">
+        <p>
+          ${fact.text}
+          <a class="source" href="${fact.source}" target="_blank">(Source)</a>
+        </p>
+        <span class="tag" style="background-color: ${categoryObject.color}">
+          ${fact.category}
+        </span>
+      </li>`;
+  });
   const html = htmlArr.join("");
   factsList.insertAdjacentHTML("afterbegin", html);
 }
