@@ -333,7 +333,6 @@ h1 {
   font-size: 1rem;
   color: #fafaf9;
   text-align: center;
-  /* This will make it stay in the middle */
   flex: 1;
 }
 
@@ -595,5 +594,39 @@ aside ul {
     padding-bottom: max(24px, env(safe-area-inset-bottom));
     padding-left: max(16px, env(safe-area-inset-left));
     padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
+
+/* Update the author credits styles */
+.author-credits {
+  font-size: 1rem;
+  color: #fafaf9;
+  text-align: center;
+  flex: 1;
+}
+
+.author-credits a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.author-credits a:hover {
+  text-decoration: underline;
+}
+
+/* Add mobile-specific styles */
+@media (max-width: 768px) {
+  .author-credits {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 1.2rem; /* Larger text on mobile */
+    font-weight: bold; /* Make name bolder */
+  }
+
+  /* Create a separate line for links */
+  .author-credits .links {
+    font-size: 1rem; /* Slightly smaller than the name */
+    font-weight: normal;
   }
 }
