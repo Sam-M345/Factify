@@ -211,8 +211,8 @@ form.addEventListener("submit", async function (e) {
   const category = categorySelect.value;
 
   // Basic validation
-  if (text.length > 200) {
-    alert("Text must be less than 200 characters");
+  if (text.length > 300) {
+    alert("Text must be less than 300 characters");
     return;
   }
 
@@ -274,7 +274,7 @@ form.addEventListener("submit", async function (e) {
 
 // Add character counter for text input
 textInput.addEventListener("input", function () {
-  const remainingChars = 200 - textInput.value.length;
+  const remainingChars = 300 - textInput.value.length;
   const counterSpan = form.querySelector("span");
   counterSpan.textContent = remainingChars;
 });
