@@ -854,20 +854,36 @@ img {
   }
 }
 
-/* Add margins to header controls */
+/* Add larger margins to header controls */
 .sort-select {
-  margin: 0 16px; /* 16px on left and right */
+  margin: 0 24px; /* 24px on left and right */
 }
 
 .btn-open {
-  margin: 0 16px; /* 16px on left and right */
+  margin: 0 24px; /* 24px on left and right */
 }
 
 /* Preserve margins on mobile */
 @media (max-width: 768px) {
   .sort-select,
   .btn-open {
-    margin-left: 16px !important;
-    margin-right: 16px !important;
+    margin-left: 24px !important;
+    margin-right: 24px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .tag {
+    padding: 6px 12px; /* Reduce padding slightly on mobile */
+    margin: 0 8px; /* Add some horizontal margin */
+  }
+
+  /* Specific adjustments for longer category names */
+  .tag[style*="entertainment"],
+  .tag[style*="technology"],
+  .tag[style*="history"] {
+    padding: 6px 10px; /* Slightly less padding for longer words */
+    font-size: 0.9em; /* Slightly smaller font size */
+    margin: 0 6px; /* Slightly less margin */
   }
 }
