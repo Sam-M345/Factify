@@ -207,7 +207,7 @@ form.addEventListener("submit", async function (e) {
 
   // Get the input values
   const text = textInput.value;
-  let source = sourceInput.value;
+  const source = sourceInput.value;
   const category = categorySelect.value;
 
   // Basic validation
@@ -216,14 +216,11 @@ form.addEventListener("submit", async function (e) {
     return;
   }
 
-  // Format source URL if needed
-  if (!source.startsWith("(Source)")) {
-    source = `(Source) ${source}`;
-  }
-
-  // Validate URL - check if it contains https://www.
-  if (!source.includes("https://www.")) {
-    alert("Please provide a valid source URL starting with https://www.");
+  // Basic URL validation - check if it's a valid URL format
+  if (!source.includes("http://") && !source.includes("https://")) {
+    alert(
+      "Please provide a valid source URL starting with http:// or https://"
+    );
     return;
   }
 
@@ -263,7 +260,11 @@ form.addEventListener("submit", async function (e) {
     form.classList.add("hidden");
     btnShare.textContent = "Share a fact";
 
-    // Reload facts to show the new one
+    // Switch to "most recent" sort
+    sortSelect.value = "recent";
+    localStorage.setItem("sortPreference", "recent");
+
+    // Reload facts to show the new one at the top
     loadFacts("all");
   } catch (error) {
     console.error("Error creating fact:", error);
