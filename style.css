@@ -156,7 +156,7 @@ h1 {
 
 .source:link,
 .source:visited {
-  color: #a8a29e;
+  color: #3b82f6;
   text-decoration: none;
   margin-left: 12px;
   transition: 0.3s;
@@ -164,7 +164,8 @@ h1 {
 
 .source:hover,
 .source:active {
-  color: #3b82f6;
+  color: #60a5fa;
+  text-decoration: underline;
 }
 
 .btn {
