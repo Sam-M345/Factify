@@ -394,3 +394,206 @@ aside ul {
 .btn-all-categories.active::before {
   color: #ffffff;
 }
+
+/* Mobile Responsive Updates */
+@media (max-width: 768px) {
+  body {
+    padding: 16px 16px;
+  }
+
+  .container {
+    padding-right: 8px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 1.5rem;
+    padding-right: 24px;
+  }
+
+  .logo {
+    justify-content: center;
+    margin-right: 24px;
+  }
+
+  .author-credits {
+    margin-right: 24px;
+  }
+
+  .header-controls {
+    width: calc(100% - 24px);
+    flex-direction: column;
+    gap: 12px;
+    margin-right: 24px;
+  }
+
+  .sort-select {
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .btn-open {
+    width: 100%;
+  }
+
+  .main {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Improve category buttons layout for mobile */
+  aside ul {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Two columns */
+    gap: 8px;
+    padding: 0 4px;
+    margin-right: 8px;
+  }
+
+  .btn-all-categories {
+    grid-column: 1 / -1; /* Make "All" button span full width */
+    margin-bottom: 8px;
+  }
+
+  .btn-category,
+  .btn-all-categories {
+    padding: 8px 12px;
+    font-size: 14px;
+    min-height: 40px;
+    justify-content: center;
+    text-align: center;
+    width: calc(100% - 8px);
+    margin-right: 8px;
+  }
+
+  /* Adjust the indicator for mobile */
+  .btn-category.active::before,
+  .btn-all-categories.active::before {
+    left: 8px;
+    font-size: 16px;
+  }
+
+  /* Adjust fact cards for mobile */
+  .fact {
+    padding: 12px 16px;
+    font-size: 15px;
+    margin-bottom: 12px;
+    margin-right: 16px;
+  }
+
+  .fact-form {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  /* Make voting buttons more touch-friendly */
+  .vote-buttons button {
+    padding: 8px 12px;
+    min-width: 60px;
+  }
+
+  /* Add spacing for posts */
+  .facts-list {
+    padding-right: 24px;
+  }
+
+  /* Adjust fact bottom line elements */
+  .fact-bottom-line {
+    padding-right: 12px;
+  }
+}
+
+/* iPhone specific adjustments */
+@media (max-width: 430px) {
+  body {
+    padding: 16px;
+  }
+
+  .container {
+    padding-right: 12px;
+  }
+
+  .header {
+    gap: 12px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  .slogan {
+    font-size: 0.9rem;
+  }
+
+  /* Make category grid single column for very small screens */
+  aside ul {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-right: 12px;
+  }
+
+  .btn-category,
+  .btn-all-categories {
+    width: calc(100% - 12px);
+    margin-right: 12px;
+  }
+
+  /* Adjust the form for smaller screens */
+  .fact-form {
+    padding: 12px;
+  }
+
+  .fact-form input,
+  .fact-form select {
+    font-size: 15px;
+    padding: 10px 16px;
+  }
+
+  /* Increase spacing for smaller screens */
+  .facts-list {
+    padding-right: 32px;
+  }
+
+  .fact {
+    margin-right: 24px;
+    padding: 12px 16px;
+  }
+
+  .fact-bottom-line {
+    padding-right: 16px;
+  }
+
+  /* Ensure vote buttons don't touch the edge */
+  .vote-buttons {
+    margin-right: 8px;
+  }
+
+  /* Increase spacing for header elements on smaller screens */
+  .header {
+    padding-right: 32px;
+  }
+
+  .logo {
+    margin-right: 32px;
+  }
+
+  .author-credits {
+    margin-right: 32px;
+  }
+
+  .header-controls {
+    width: calc(100% - 32px);
+    margin-right: 32px;
+  }
+}
+
+/* Handle notch/dynamic island area on iPhone */
+@supports (padding-top: env(safe-area-inset-top)) {
+  body {
+    padding-top: max(24px, env(safe-area-inset-top));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
