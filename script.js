@@ -11,8 +11,20 @@ const categorySelect = form.querySelector("select");
 const btnShare = document.querySelector(".btn-open");
 const sortSelect = document.querySelector(".sort-select");
 
-// Set initial sort value from localStorage or default to "upvoted"
-sortSelect.value = localStorage.getItem("sortPreference") || "upvoted";
+// Update sort select to show placeholder
+const currentSort = localStorage.getItem("sortPreference") || "upvoted";
+
+// Add placeholder option if it doesn't exist
+if (!sortSelect.querySelector('option[value=""]')) {
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.text = "Sort by:";
+  placeholder.disabled = true;
+  sortSelect.insertBefore(placeholder, sortSelect.firstChild);
+}
+
+// Set the current sort value
+sortSelect.value = currentSort;
 
 // Categories array
 const CATEGORIES = [
@@ -328,4 +340,11 @@ categoryButtons.forEach((button) => {
     currentCategory = button.textContent.toLowerCase().trim();
     loadFacts(currentCategory);
   });
+});
+
+// Keep "Sort by:" visible when no option is actively selected
+sortSelect.addEventListener("change", (e) => {
+  if (!e.target.value) {
+    e.target.selectedIndex = 0;
+  }
 });
