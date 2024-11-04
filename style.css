@@ -97,33 +97,32 @@ h1 {
   padding: 16px 24px;
   letter-spacing: -1px;
   border-radius: 16px;
-
   display: flex;
-  align-items: center;
-  gap: 24px;
+  flex-direction: column;
+  gap: 16px;
 }
 
-@media (max-width: 1200px) {
-  .fact {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
-  }
+.fact-bottom-line {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .tag {
   text-transform: uppercase;
   font-size: 14px;
   font-family: "Coiny", sans-serif;
-  padding-top: 3px;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 3px 10px;
   border-radius: 100px;
+}
+
+.fact-date {
+  color: #a8a29e;
+  font-size: 14px;
 }
 
 .vote-buttons {
   margin-left: auto;
-  flex-shrink: 0;
   display: flex;
   gap: 8px;
 }
@@ -141,12 +140,17 @@ h1 {
   transition: 0.3s;
 }
 
-.vote-buttons button:hover {
-  background-color: #292524;
-}
+@media (max-width: 1200px) {
+  .fact-bottom-line {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 
-ul {
-  list-style: none;
+  .vote-buttons {
+    width: 100%;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
 }
 
 .source:link,

@@ -53,27 +53,40 @@ function createFactsList(dataArray) {
         ${fact.text}
         <a class="source" href="${fact.source}" target="_blank">(Source)</a>
       </p>
-      <span class="tag" style="background-color: ${
-        CATEGORIES.find((cat) => cat.name === fact.category)?.color
-      }">${fact.category}</span>
-      <div class="vote-buttons">
-        <button class="vote-button" data-vote-type="${
-          VOTE_TYPES.UPVOTE
-        }" data-fact-id="${fact.id}">
-          👍🏻 ${fact.votesUp || 0}
-        </button>
-        <button class="vote-button" data-vote-type="${
-          VOTE_TYPES.DOWNVOTE
-        }" data-fact-id="${fact.id}">
-          👎🏻 ${fact.votesDown || 0}
-        </button>
+      <div class="fact-bottom-line">
+        <span class="tag" style="background-color: ${
+          CATEGORIES.find((cat) => cat.name === fact.category)?.color
+        }">${fact.category}</span>
+        <span class="fact-date">Posted on: ${new Date(
+          fact.created_at
+        ).toLocaleString("en-US", {
+          month: "numeric",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true,
+          timeZone: "America/Los_Angeles",
+          timeZoneName: "short",
+        })}</span>
+        <div class="vote-buttons">
+          <button class="vote-button" data-vote-type="${
+            VOTE_TYPES.UPVOTE
+          }" data-fact-id="${fact.id}">
+            👍🏻 ${fact.votesUp || 0}
+          </button>
+          <button class="vote-button" data-vote-type="${
+            VOTE_TYPES.DOWNVOTE
+          }" data-fact-id="${fact.id}">
+            👎🏻 ${fact.votesDown || 0}
+          </button>
+        </div>
       </div>
     </li>`
   );
 
   factsList.innerHTML = htmlArr.join("");
 
-  // Add event listeners to all vote buttons
   document.querySelectorAll(".vote-button").forEach((button) => {
     button.addEventListener("click", handleVote);
   });
@@ -155,7 +168,7 @@ async function loadFacts(category = "all") {
 
     if (sortOption === "recent") {
       filteredData.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
     } else if (sortOption === "upvoted") {
       filteredData.sort((a, b) => {
