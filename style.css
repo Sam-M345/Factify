@@ -28,6 +28,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
 }
 
 .main {
@@ -322,4 +323,26 @@ h1 {
 .sort-select:focus {
   outline: none;
   box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.author-credits {
+  font-size: 1rem;
+  color: #fafaf9;
+  text-align: center;
+  /* This will make it stay in the middle */
+  flex: 1;
+}
+
+.author-credits a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.author-credits a:hover {
+  text-decoration: underline;
+}
+
+aside ul {
+  list-style: none;
+  padding: 0;
 }
