@@ -302,3 +302,30 @@ categoryButtons.forEach((button) => {
     loadFacts(currentCategory);
   });
 });
+
+// Update the initial state to show "All" as selected when page loads
+document.addEventListener("DOMContentLoaded", () => {
+  btnAllCategories.classList.add("active");
+});
+
+// Update the category button click handlers
+btnAllCategories.addEventListener("click", () => {
+  currentCategory = "all";
+  // Remove active class from all buttons
+  categoryButtons.forEach((btn) => btn.classList.remove("active"));
+  btnAllCategories.classList.add("active");
+  loadFacts("all");
+});
+
+categoryButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    // Remove active class from all buttons including "All"
+    btnAllCategories.classList.remove("active");
+    categoryButtons.forEach((btn) => btn.classList.remove("active"));
+    // Add active class to clicked button
+    button.classList.add("active");
+
+    currentCategory = button.textContent.toLowerCase().trim();
+    loadFacts(currentCategory);
+  });
+});

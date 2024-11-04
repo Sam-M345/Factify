@@ -195,6 +195,9 @@ h1 {
 .btn-all-categories {
   margin-bottom: 16px;
   width: 100%;
+  background-image: none;
+  background-color: #000000;
+  color: #ffffff;
 }
 
 .btn-category {
@@ -345,4 +348,48 @@ h1 {
 aside ul {
   list-style: none;
   padding: 0;
+}
+
+.btn-category,
+.btn-all-categories {
+  width: 100%;
+  background-image: none;
+  position: relative;
+  padding-left: 48px; /* Space for the indicator */
+  text-align: center; /* Center the text */
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  padding-right: 48px; /* Balance the left padding */
+}
+
+.btn-category.active,
+.btn-all-categories.active {
+  transform: scale(1.05);
+}
+
+/* Just the indicator */
+.btn-category.active::before,
+.btn-all-categories.active::before {
+  content: "►";
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 24px;
+  margin-right: auto; /* Ensure indicator doesn't affect centering */
+}
+
+/* Hover effect without changing opacity */
+.btn-category:not(.active):hover,
+.btn-all-categories:not(.active):hover {
+  transform: scale(1.02);
+}
+
+.btn-all-categories:hover {
+  transform: scale(110%) rotate(-2deg);
+}
+
+.btn-all-categories.active::before {
+  color: #ffffff;
 }
