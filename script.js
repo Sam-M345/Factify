@@ -63,12 +63,14 @@ function createFactsList(dataArray) {
     (fact) => `<li class="fact">
       <p>
         ${fact.text}
-        <a class="source" href="${fact.source}" target="_blank">(Source)</a>
       </p>
       <div class="fact-bottom-line">
-        <span class="tag" style="background-color: ${
-          CATEGORIES.find((cat) => cat.name === fact.category)?.color
-        }">${fact.category}</span>
+        <div class="source-category-container">
+          <a class="source" href="${fact.source}" target="_blank">(Source)</a>
+          <span class="tag" style="background-color: ${
+            CATEGORIES.find((cat) => cat.name === fact.category)?.color
+          }">${fact.category}</span>
+        </div>
         <span class="fact-date">Posted on: ${new Date(
           fact.created_at
         ).toLocaleString("en-US", {

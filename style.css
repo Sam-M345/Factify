@@ -407,6 +407,27 @@ h1 {
     font-size: 1rem; /* Slightly smaller than the name */
     font-weight: normal;
   }
+
+  /* Make category tags smaller */
+  .tag {
+    font-size: 12px; /* Reduced from 14px */
+    padding: 2px 8px; /* Reduced padding */
+    margin: 0;
+  }
+
+  /* Adjust source and category container */
+  .source-category-container {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Reduced gap between source and category */
+  }
+
+  /* Adjust source size to match */
+  .source:link,
+  .source:visited {
+    font-size: 12px; /* Match category size */
+    margin: 0;
+  }
 }
 
 @media (max-width: 480px) {
@@ -586,6 +607,26 @@ aside ul {
   .header-controls {
     padding-right: 0;
     margin-right: 0;
+  }
+
+  /* Make category tags smaller */
+  .tag {
+    font-size: 11px; /* Even smaller on very small screens */
+    padding: 2px 6px;
+  }
+
+  /* Adjust source and category container */
+  .source-category-container {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Reduced gap between source and category */
+  }
+
+  /* Adjust source size to match */
+  .source:link,
+  .source:visited {
+    font-size: 11px; /* Match category size */
+    margin: 0;
   }
 }
 
@@ -926,5 +967,106 @@ img {
     left: 16px;
     transform: none;
     top: -24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .fact {
+    font-size: 17px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  /* Reorganize fact bottom line elements */
+  .fact-bottom-line {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Create a container for source and category */
+  .source-category-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Style source link */
+  .source:link,
+  .source:visited {
+    display: inline-block;
+    margin: 0;
+    font-size: 0.9em;
+  }
+
+  /* Style category tag */
+  .tag {
+    margin: 0;
+    display: inline-block;
+  }
+
+  /* Style date */
+  .fact-date {
+    font-size: 0.85em;
+    margin: 4px 0;
+  }
+
+  /* Keep vote buttons at the bottom */
+  .vote-buttons {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 8px;
+  }
+}
+
+/* Update button styles for mobile */
+@media (max-width: 768px) {
+  .btn-large {
+    font-size: 1.1rem; /* Reduced from 1.6rem */
+    padding: 0.8rem 1.6rem; /* Reduced padding */
+  }
+
+  /* Make Share a fact button distinct */
+  .btn-open {
+    width: calc(100% - 32px);
+    font-size: 1.1rem;
+    padding: 0.8rem 1rem;
+    background-image: none; /* Remove gradient */
+    background-color: #1a1a1a; /* Dark grey background */
+    margin-bottom: 16px;
+    border: 2px solid #333333; /* Darker grey border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    border-radius: 0; /* Remove border radius for rectangular shape */
+    color: #ffffff; /* White text */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Hover state */
+  .btn-open:hover {
+    background-color: #333333;
+    transform: none; /* Remove rotation effect */
+  }
+
+  /* Keep category buttons rounded */
+  .btn-category,
+  .btn-all-categories {
+    border-radius: 100px;
+    background-image: none;
+    box-shadow: none;
+  }
+}
+
+/* Even smaller for very small screens */
+@media (max-width: 430px) {
+  .btn-large {
+    font-size: 1rem; /* Further reduced */
+    padding: 0.7rem 1.4rem;
+  }
+
+  .btn-open {
+    font-size: 1rem;
+    padding: 0.7rem 1rem;
   }
 }
