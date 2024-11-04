@@ -9,6 +9,10 @@ const textInput = form.querySelector('input[type="text"]');
 const sourceInput = form.querySelector('input[type="text"]:nth-child(3)');
 const categorySelect = form.querySelector("select");
 const btnShare = document.querySelector(".btn-open");
+const sortSelect = document.querySelector(".sort-select");
+
+// Set initial sort value from localStorage or default to "upvoted"
+sortSelect.value = localStorage.getItem("sortPreference") || "upvoted";
 
 // Categories array
 const CATEGORIES = [
@@ -38,9 +42,8 @@ categoryButtons.forEach((button) => {
 
 // Event Listeners for voting buttons
 const VOTE_TYPES = {
-  INTERESTING: "votesInteresting",
-  MINDBLOWING: "votesMindblowing",
-  FALSE: "votesFalse",
+  UPVOTE: "votesUp",
+  DOWNVOTE: "votesDown",
 };
 
 function createFactsList(dataArray) {
@@ -55,19 +58,14 @@ function createFactsList(dataArray) {
       }">${fact.category}</span>
       <div class="vote-buttons">
         <button class="vote-button" data-vote-type="${
-          VOTE_TYPES.INTERESTING
+          VOTE_TYPES.UPVOTE
         }" data-fact-id="${fact.id}">
-          👍 ${fact.votesInteresting || 0}
+          👍🏻 ${fact.votesUp || 0}
         </button>
         <button class="vote-button" data-vote-type="${
-          VOTE_TYPES.MINDBLOWING
+          VOTE_TYPES.DOWNVOTE
         }" data-fact-id="${fact.id}">
-          🤯 ${fact.votesMindblowing || 0}
-        </button>
-        <button class="vote-button" data-vote-type="${
-          VOTE_TYPES.FALSE
-        }" data-fact-id="${fact.id}">
-          ⛔️ ${fact.votesFalse || 0}
+          👎🏻 ${fact.votesDown || 0}
         </button>
       </div>
     </li>`
@@ -119,12 +117,7 @@ async function handleVote(e) {
       // Update the button text immediately
       const currentCount = fact[voteType] || 0;
       const newCount = currentCount + 1;
-      const emoji =
-        voteType === VOTE_TYPES.INTERESTING
-          ? "👍"
-          : voteType === VOTE_TYPES.MINDBLOWING
-          ? "🤯"
-          : "⛔️";
+      const emoji = voteType === VOTE_TYPES.UPVOTE ? "👍🏻" : "👎🏻";
       button.textContent = `${emoji} ${newCount}`;
     }
   } catch (error) {
@@ -157,10 +150,20 @@ async function loadFacts(category = "all") {
         : data.filter((fact) => fact.category.toLowerCase() === category);
     console.log("Filtered data:", filteredData);
 
-    // Sort facts by creation date in descending order (newest first)
-    filteredData.sort((a, b) => {
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
+    // Get sort preference from localStorage or default to "upvoted"
+    const sortOption = localStorage.getItem("sortPreference") || "upvoted";
+
+    if (sortOption === "recent") {
+      filteredData.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+    } else if (sortOption === "upvoted") {
+      filteredData.sort((a, b) => {
+        const votesA = a.votesUp || 0;
+        const votesB = b.votesUp || 0;
+        return votesB - votesA;
+      });
+    }
 
     // Create new fact elements
     createFactsList(filteredData);
@@ -221,9 +224,8 @@ form.addEventListener("submit", async function (e) {
     text,
     source,
     category,
-    votesInteresting: 0,
-    votesMindblowing: 0,
-    votesFalse: 0,
+    votesUp: 0,
+    votesDown: 0,
   };
 
   try {
@@ -261,4 +263,28 @@ textInput.addEventListener("input", function () {
   const remainingChars = 200 - textInput.value.length;
   const counterSpan = form.querySelector("span");
   counterSpan.textContent = remainingChars;
+});
+
+// Update the sort event listener to save preference
+sortSelect.addEventListener("change", () => {
+  localStorage.setItem("sortPreference", sortSelect.value);
+  loadFacts(
+    btnAllCategories.classList.contains("active") ? "all" : currentCategory
+  );
+});
+
+// Add a variable to track current category
+let currentCategory = "all";
+
+// Update category button click handlers
+btnAllCategories.addEventListener("click", () => {
+  currentCategory = "all";
+  loadFacts("all");
+});
+
+categoryButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    currentCategory = button.textContent.toLowerCase().trim();
+    loadFacts(currentCategory);
+  });
 });

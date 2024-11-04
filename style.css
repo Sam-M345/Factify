@@ -124,7 +124,6 @@ h1 {
 .vote-buttons {
   margin-left: auto;
   flex-shrink: 0;
-
   display: flex;
   gap: 8px;
 }
@@ -288,7 +287,7 @@ ul {
 }
 
 .btn-open {
-  margin-left: auto;
+  margin-left: 0;
 }
 
 /* Update the gap between category buttons */
@@ -296,4 +295,27 @@ ul {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* Add styles for header controls and sort select */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sort-select {
+  background-color: #78716c;
+  border: none;
+  border-radius: 100px;
+  padding: 8px 16px;
+  font-size: 16px;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sort-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #3b82f6;
 }
