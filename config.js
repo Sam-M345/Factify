@@ -1,3 +1,4 @@
+
 const config = {
   supabaseUrl: "https://otxttghfmfctnyechren.supabase.co/rest/v1/facts",
   supabaseKey:
@@ -5,3 +6,7 @@ const config = {
 };
 
 export default config;
+
+
+
+
