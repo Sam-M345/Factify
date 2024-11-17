@@ -1214,32 +1214,36 @@ img {
   /* Category list item containing ALL button */
   .category:first-child {
     grid-column: 1 / -1;
-    width: 50%;
-    margin: 0 auto;
+    width: 40%;
+    margin: -8px auto 0; /* Negative margin to move up and remove space */
   }
 
   /* ALL button styling */
   .btn-all-categories {
     width: 100%;
-    min-height: 40px;
+    min-height: 36px; /* Slightly reduced height */
     background-color: #000000;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 4px; /* Reduced bottom margin */
+    font-size: 13px; /* Slightly smaller font */
+    padding: 6px 12px; /* Reduced padding */
   }
 
   /* Category buttons */
   .btn-category {
     width: 100%;
-    min-height: 40px;
+    min-height: 36px; /* Match ALL button height */
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: 13px; /* Match ALL button font size */
+    padding: 6px 12px; /* Match ALL button padding */
   }
 
   /* Reduce space above categories */
   .fact-form {
-    margin-bottom: 8px;
+    margin-bottom: 16px; /* Increased slightly to account for negative margin */
   }
 }
