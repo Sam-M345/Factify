@@ -61,9 +61,7 @@ const VOTE_TYPES = {
 function createFactsList(dataArray) {
   const htmlArr = dataArray.map(
     (fact) => `<li class="fact">
-      <p>
-        ${fact.text}
-      </p>
+      <p>${fact.text}</p>
       <div class="fact-bottom-line">
         <div class="source-category-container">
           <a class="source" href="${fact.source}" target="_blank">(Source)</a>
@@ -96,59 +94,171 @@ function createFactsList(dataArray) {
           </button>
         </div>
       </div>
+      <div class="comments-section" data-fact-id="${fact.id}">
+        <div class="comments-list"></div>
+      </div>
+      <div class="comment-box">
+        <textarea class="comment-textarea" placeholder="Optional: Share why you disagree with this fact..."></textarea>
+        <div class="comment-actions">
+          <button class="comment-button cancel-comment">Cancel</button>
+          <button class="comment-button submit-comment">Submit Downvote</button>
+        </div>
+      </div>
     </li>`
   );
 
   factsList.innerHTML = htmlArr.join("");
 
+  // Add event listeners for vote buttons and comment box interactions
   document.querySelectorAll(".vote-button").forEach((button) => {
     button.addEventListener("click", handleVote);
   });
+
+  // Load comments for each fact
+  loadAllComments(dataArray.map((fact) => fact.id));
 }
 
 async function handleVote(e) {
   const button = e.target;
   const factId = button.dataset.factId;
   const voteType = button.dataset.voteType;
+  const factElement = button.closest(".fact");
+  const commentBox = factElement.querySelector(".comment-box");
 
-  try {
-    // Get current vote count
-    const res = await fetch(`${config.supabaseUrl}?id=eq.${factId}`, {
-      headers: {
-        apikey: config.supabaseKey,
-        authorization: `Bearer ${config.supabaseKey}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
+  // Show comment box only for downvotes
+  if (voteType === VOTE_TYPES.DOWNVOTE) {
+    commentBox.classList.add("active");
+
+    // Handle comment submission
+    const submitBtn = commentBox.querySelector(".submit-comment");
+    const cancelBtn = commentBox.querySelector(".cancel-comment");
+    const textarea = commentBox.querySelector(".comment-textarea");
+
+    // Remove existing listeners to prevent duplicates
+    submitBtn.replaceWith(submitBtn.cloneNode(true));
+    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+
+    // Get fresh references
+    const newSubmitBtn = commentBox.querySelector(".submit-comment");
+    const newCancelBtn = commentBox.querySelector(".cancel-comment");
+
+    // Add new listeners
+    newSubmitBtn.addEventListener("click", async () => {
+      const comment = textarea.value.trim();
+      await submitVoteWithComment(factId, voteType, comment, button);
+      commentBox.classList.remove("active");
+      textarea.value = "";
     });
-    const [fact] = await res.json();
 
-    // Increment the vote
+    newCancelBtn.addEventListener("click", () => {
+      commentBox.classList.remove("active");
+      textarea.value = "";
+    });
+
+    return;
+  }
+
+  // Handle upvote normally
+  await submitVoteWithComment(factId, voteType, null, button);
+}
+
+// New function to handle vote submission with optional comment
+async function submitVoteWithComment(factId, voteType, comment, button) {
+  try {
+    // Get current fact data - Remove duplicate path
+    const res = await fetch(
+      `${config.supabaseUrl}?id=eq.${factId}`, // Removed /rest/v1/facts
+      {
+        headers: {
+          apikey: config.supabaseKey,
+          authorization: `Bearer ${config.supabaseKey}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!res.ok) {
+      console.error("Error fetching fact:", await res.text());
+      throw new Error("Failed to fetch fact");
+    }
+
+    const [fact] = await res.json();
+    console.log("Current fact data:", fact);
+
+    // First, update the vote count in the facts table
     const updateData = {
       [voteType]: (fact[voteType] || 0) + 1,
     };
 
-    // Update the vote in the database
-    const updateRes = await fetch(`${config.supabaseUrl}?id=eq.${factId}`, {
-      method: "PATCH",
-      headers: {
-        apikey: config.supabaseKey,
-        authorization: `Bearer ${config.supabaseKey}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify(updateData),
-    });
+    console.log("Sending update data:", updateData);
 
-    if (updateRes.ok) {
-      // Update the button text immediately
-      const currentCount = fact[voteType] || 0;
-      const newCount = currentCount + 1;
-      const emoji = voteType === VOTE_TYPES.UPVOTE ? "👍🏻" : "👎🏻";
-      button.textContent = `${emoji} ${newCount}`;
+    const updateRes = await fetch(
+      `${config.supabaseUrl}?id=eq.${factId}`, // Removed /rest/v1/facts
+      {
+        method: "PATCH",
+        headers: {
+          apikey: config.supabaseKey,
+          authorization: `Bearer ${config.supabaseKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify(updateData),
+      }
+    );
+
+    if (!updateRes.ok) {
+      const errorText = await updateRes.text();
+      console.error("Update response error:", errorText);
+      throw new Error(`Update failed: ${errorText}`);
     }
+
+    // If there's a comment, insert it into the comments table
+    if (comment && voteType === VOTE_TYPES.DOWNVOTE) {
+      const commentData = {
+        fact_id: parseInt(factId),
+        comment: comment,
+        votesDown: 1,
+      };
+
+      console.log("Sending comment data:", commentData);
+
+      const baseUrl = config.supabaseUrl.replace("/rest/v1/facts", "");
+      const commentsUrl = `${baseUrl}/rest/v1/fact_comments`;
+
+      console.log("Posting comment to URL:", commentsUrl);
+
+      const commentRes = await fetch(commentsUrl, {
+        method: "POST",
+        headers: {
+          apikey: config.supabaseKey,
+          authorization: `Bearer ${config.supabaseKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify(commentData),
+      });
+
+      if (!commentRes.ok) {
+        const errorText = await commentRes.text();
+        console.error("Comment insertion failed:", errorText);
+        console.error("Response status:", commentRes.status);
+        console.error(
+          "Response headers:",
+          Object.fromEntries(commentRes.headers)
+        );
+      } else {
+        console.log("Comment added successfully");
+        loadAllComments([factId]);
+      }
+    }
+
+    // Update button text only if everything succeeded
+    const currentCount = fact[voteType] || 0;
+    const newCount = currentCount + 1;
+    const emoji = voteType === VOTE_TYPES.UPVOTE ? "👍🏻" : "👎🏻";
+    button.textContent = `${emoji} ${newCount}`;
   } catch (error) {
-    console.error("Error updating vote:", error);
+    console.error("Error in submitVoteWithComment:", error);
     alert("There was an error updating the vote. Please try again.");
   }
 }
@@ -350,3 +460,55 @@ sortSelect.addEventListener("change", (e) => {
     e.target.selectedIndex = 0;
   }
 });
+
+// New function to load comments
+async function loadAllComments(factIds) {
+  try {
+    const baseUrl = config.supabaseUrl.replace("/rest/v1/facts", "");
+    const commentsUrl = `${baseUrl}/rest/v1/fact_comments`;
+
+    console.log("Fetching comments for fact IDs:", factIds);
+    console.log("Comments URL:", commentsUrl);
+
+    const res = await fetch(
+      `${commentsUrl}?fact_id=in.(${factIds.join(",")})`,
+      {
+        headers: {
+          apikey: config.supabaseKey,
+          authorization: `Bearer ${config.supabaseKey}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!res.ok) throw new Error("Failed to fetch comments");
+
+    const comments = await res.json();
+    console.log("Fetched comments:", comments);
+
+    // Group comments by fact_id
+    comments.forEach((comment) => {
+      const commentsSection = document.querySelector(
+        `.comments-section[data-fact-id="${comment.fact_id}"] .comments-list`
+      );
+      console.log(
+        "Looking for comments section:",
+        comment.fact_id,
+        !!commentsSection
+      );
+      if (commentsSection) {
+        const commentElement = document.createElement("div");
+        commentElement.className = "comment";
+        commentElement.innerHTML = `
+          <p class="comment-text">${comment.comment}</p>
+          <span class="comment-date">${new Date(
+            comment.created_at
+          ).toLocaleString()}</span>
+        `;
+        commentsSection.appendChild(commentElement);
+      }
+    });
+  } catch (error) {
+    console.error("Error loading comments:", error);
+  }
+}

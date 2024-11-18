@@ -1247,3 +1247,75 @@ img {
     margin-bottom: 16px; /* Increased slightly to account for negative margin */
   }
 }
+
+/* Add these styles */
+.comment-box {
+  display: none;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.comment-box.active {
+  display: block;
+}
+
+.comment-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  background-color: #292524;
+  border: 1px solid #78716c;
+  border-radius: 8px;
+  color: #fafaf9;
+  font-family: inherit;
+  font-size: 14px;
+  margin-bottom: 8px;
+  resize: vertical;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.comment-button {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 100px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: #78716c;
+  color: #fafaf9;
+}
+
+.submit-comment {
+  background-color: #ef4444;
+}
+
+.comments-section {
+  margin-top: 1rem;
+  padding: 0 1rem;
+}
+
+.comment {
+  background-color: #292524;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.comment-text {
+  color: #fafaf9;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.comment-date {
+  color: #78716c;
+  font-size: 0.8rem;
+}
+
+.comments-list {
+  margin-top: 0.5rem;
+}
