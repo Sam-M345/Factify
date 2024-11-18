@@ -218,6 +218,7 @@ async function submitVoteWithComment(factId, voteType, comment, button) {
         fact_id: parseInt(factId),
         comment: comment,
         votesDown: 1,
+        created_at: new Date().toISOString(),
       };
 
       console.log("Sending comment data:", commentData);
@@ -470,42 +471,57 @@ async function loadAllComments(factIds) {
     console.log("Fetching comments for fact IDs:", factIds);
     console.log("Comments URL:", commentsUrl);
 
-    const res = await fetch(
-      `${commentsUrl}?fact_id=in.(${factIds.join(",")})`,
-      {
-        headers: {
-          apikey: config.supabaseKey,
-          authorization: `Bearer ${config.supabaseKey}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // Remove the order by clause since created_at is NULL
+    const queryUrl = `${commentsUrl}?fact_id=in.(${factIds.join(",")})`;
+    console.log("Full query URL:", queryUrl);
 
-    if (!res.ok) throw new Error("Failed to fetch comments");
+    const res = await fetch(queryUrl, {
+      headers: {
+        apikey: config.supabaseKey,
+        authorization: `Bearer ${config.supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Failed to fetch comments:", errorText);
+      throw new Error("Failed to fetch comments");
+    }
 
     const comments = await res.json();
     console.log("Fetched comments:", comments);
 
-    // Group comments by fact_id
-    comments.forEach((comment) => {
+    // Clear and update comments for each fact
+    factIds.forEach((factId) => {
       const commentsSection = document.querySelector(
-        `.comments-section[data-fact-id="${comment.fact_id}"] .comments-list`
-      );
-      console.log(
-        "Looking for comments section:",
-        comment.fact_id,
-        !!commentsSection
+        `.comments-section[data-fact-id="${factId}"] .comments-list`
       );
       if (commentsSection) {
-        const commentElement = document.createElement("div");
-        commentElement.className = "comment";
-        commentElement.innerHTML = `
-          <p class="comment-text">${comment.comment}</p>
-          <span class="comment-date">${new Date(
-            comment.created_at
-          ).toLocaleString()}</span>
-        `;
-        commentsSection.appendChild(commentElement);
+        commentsSection.innerHTML = ""; // Clear existing comments
+
+        // Filter comments for this fact
+        const factComments = comments.filter(
+          (c) => c.fact_id === parseInt(factId)
+        );
+
+        // Add comments
+        factComments.forEach((comment) => {
+          const commentElement = document.createElement("div");
+          commentElement.className = "comment";
+          commentElement.innerHTML = `
+            <p class="comment-text">${comment.comment}</p>
+            ${
+              comment.created_at
+                ? `<span class="comment-date">${new Date(
+                    comment.created_at
+                  ).toLocaleString()}</span>`
+                : ""
+            }
+          `;
+          commentsSection.appendChild(commentElement);
+        });
       }
     });
   } catch (error) {
