@@ -95,13 +95,14 @@ function createFactsList(dataArray) {
         </div>
       </div>
       <div class="comments-section hidden" data-fact-id="${fact.id}">
+        <h3 class="comments-title">🗣️ User Opinions</h3>
         <div class="comments-list"></div>
       </div>
       <div class="comment-box">
-        <textarea class="comment-textarea" placeholder="Optional: Share why you disagree with this fact..."></textarea>
+        <textarea class="comment-textarea" placeholder="Share your thoughts about this fact..."></textarea>
         <div class="comment-actions">
           <button class="comment-button cancel-comment">Cancel</button>
-          <button class="comment-button submit-comment">Submit Downvote</button>
+          <button class="comment-button submit-comment" data-vote-type="">Submit Vote</button>
         </div>
       </div>
     </li>`
@@ -124,58 +125,62 @@ async function handleVote(e) {
   const voteType = button.dataset.voteType;
   const factElement = button.closest(".fact");
   const commentBox = factElement.querySelector(".comment-box");
+  const submitBtn = commentBox.querySelector(".submit-comment");
 
-  // Show comment box only for downvotes
-  if (voteType === VOTE_TYPES.DOWNVOTE) {
-    commentBox.classList.add("active");
+  // Show comment box for both vote types
+  commentBox.classList.add("active");
 
-    // Handle comment submission
-    const submitBtn = commentBox.querySelector(".submit-comment");
-    const cancelBtn = commentBox.querySelector(".cancel-comment");
-    const textarea = commentBox.querySelector(".comment-textarea");
+  // Update submit button text and data attribute based on vote type
+  const isUpvote = voteType === VOTE_TYPES.UPVOTE;
+  submitBtn.textContent = `Submit ${isUpvote ? "Upvote" : "Downvote"}`;
+  submitBtn.dataset.voteType = voteType;
 
-    // Remove existing listeners to prevent duplicates
-    submitBtn.replaceWith(submitBtn.cloneNode(true));
-    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
-
-    // Get fresh references
-    const newSubmitBtn = commentBox.querySelector(".submit-comment");
-    const newCancelBtn = commentBox.querySelector(".cancel-comment");
-
-    // Add new listeners
-    newSubmitBtn.addEventListener("click", async () => {
-      const comment = textarea.value.trim();
-      await submitVoteWithComment(factId, voteType, comment, button);
-      commentBox.classList.remove("active");
-      textarea.value = "";
-    });
-
-    newCancelBtn.addEventListener("click", () => {
-      commentBox.classList.remove("active");
-      textarea.value = "";
-    });
-
-    return;
+  // Update button color based on vote type
+  if (isUpvote) {
+    submitBtn.classList.remove("submit-downvote");
+    submitBtn.classList.add("submit-upvote");
+  } else {
+    submitBtn.classList.remove("submit-upvote");
+    submitBtn.classList.add("submit-downvote");
   }
 
-  // Handle upvote normally
-  await submitVoteWithComment(factId, voteType, null, button);
+  // Handle comment submission
+  const cancelBtn = commentBox.querySelector(".cancel-comment");
+  const textarea = commentBox.querySelector(".comment-textarea");
+
+  // Remove existing listeners to prevent duplicates
+  const newSubmitBtn = submitBtn.cloneNode(true);
+  const newCancelBtn = cancelBtn.cloneNode(true);
+  submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+  cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+  // Add new listeners
+  newSubmitBtn.addEventListener("click", async () => {
+    const comment = textarea.value.trim();
+    await submitVoteWithComment(factId, voteType, comment, button);
+    commentBox.classList.remove("active");
+    textarea.value = "";
+  });
+
+  newCancelBtn.addEventListener("click", () => {
+    commentBox.classList.remove("active");
+    textarea.value = "";
+  });
 }
 
 // New function to handle vote submission with optional comment
 async function submitVoteWithComment(factId, voteType, comment, button) {
   try {
-    // Get current fact data - Remove duplicate path
-    const res = await fetch(
-      `${config.supabaseUrl}?id=eq.${factId}`, // Removed /rest/v1/facts
-      {
-        headers: {
-          apikey: config.supabaseKey,
-          authorization: `Bearer ${config.supabaseKey}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    console.log("Starting vote submission:", { factId, voteType, comment });
+
+    // Get current fact data
+    const res = await fetch(`${config.supabaseUrl}?id=eq.${factId}`, {
+      headers: {
+        apikey: config.supabaseKey,
+        authorization: `Bearer ${config.supabaseKey}`,
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!res.ok) {
       console.error("Error fetching fact:", await res.text());
@@ -185,26 +190,23 @@ async function submitVoteWithComment(factId, voteType, comment, button) {
     const [fact] = await res.json();
     console.log("Current fact data:", fact);
 
-    // First, update the vote count in the facts table
+    // Update vote count
     const updateData = {
       [voteType]: (fact[voteType] || 0) + 1,
     };
 
-    console.log("Sending update data:", updateData);
+    console.log("Updating vote count:", updateData);
 
-    const updateRes = await fetch(
-      `${config.supabaseUrl}?id=eq.${factId}`, // Removed /rest/v1/facts
-      {
-        method: "PATCH",
-        headers: {
-          apikey: config.supabaseKey,
-          authorization: `Bearer ${config.supabaseKey}`,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal",
-        },
-        body: JSON.stringify(updateData),
-      }
-    );
+    const updateRes = await fetch(`${config.supabaseUrl}?id=eq.${factId}`, {
+      method: "PATCH",
+      headers: {
+        apikey: config.supabaseKey,
+        authorization: `Bearer ${config.supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(updateData),
+    });
 
     if (!updateRes.ok) {
       const errorText = await updateRes.text();
@@ -212,16 +214,16 @@ async function submitVoteWithComment(factId, voteType, comment, button) {
       throw new Error(`Update failed: ${errorText}`);
     }
 
-    // If there's a comment, insert it into the comments table
-    if (comment && voteType === VOTE_TYPES.DOWNVOTE) {
+    // If there's a comment, insert it
+    if (comment) {
       const commentData = {
         fact_id: parseInt(factId),
         comment: comment,
-        votesDown: 1,
+        vote_type: voteType,
         created_at: new Date().toISOString(),
       };
 
-      console.log("Attempting to submit comment:", commentData);
+      console.log("Submitting comment:", commentData);
 
       const baseUrl = config.supabaseUrl.replace("/rest/v1/facts", "");
       const commentsUrl = `${baseUrl}/rest/v1/fact_comments`;
@@ -242,32 +244,19 @@ async function submitVoteWithComment(factId, voteType, comment, button) {
         console.error("Comment submission failed:", errorText);
         console.error("Response status:", commentRes.status);
         throw new Error(`Failed to submit comment: ${errorText}`);
-      } else {
-        const savedComment = await commentRes.json();
-        console.log("Comment saved to database:", savedComment);
-
-        // Verify the comment exists immediately after saving
-        const verifyRes = await fetch(`${commentsUrl}?fact_id=eq.${factId}`, {
-          headers: {
-            apikey: config.supabaseKey,
-            authorization: `Bearer ${config.supabaseKey}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        const verifyComments = await verifyRes.json();
-        console.log("Verification query results:", verifyComments);
-
-        // Reload comments
-        await loadAllComments([factId]);
       }
+
+      console.log("Comment submitted successfully");
+      await loadAllComments([factId]);
     }
 
-    // Update button text only if everything succeeded
+    // Update button text
     const currentCount = fact[voteType] || 0;
     const newCount = currentCount + 1;
     const emoji = voteType === VOTE_TYPES.UPVOTE ? "👍🏻" : "👎🏻";
     button.textContent = `${emoji} ${newCount}`;
+
+    console.log("Vote submission completed successfully");
   } catch (error) {
     console.error("Error in submitVoteWithComment:", error);
     throw error;
@@ -478,10 +467,9 @@ async function loadAllComments(factIds) {
     const baseUrl = config.supabaseUrl.replace("/rest/v1/facts", "");
     const commentsUrl = `${baseUrl}/rest/v1/fact_comments`;
 
-    // Try a simpler query for a single fact ID first
-    const singleFactId = factIds[0];
-    const queryUrl = `${commentsUrl}?fact_id=eq.${singleFactId}`;
-    console.log("Trying simple query URL:", queryUrl);
+    // Use the original query to fetch all comments for all fact IDs
+    const queryUrl = `${commentsUrl}?fact_id=in.(${factIds.join(",")})`;
+    console.log("Fetching comments with URL:", queryUrl);
 
     const res = await fetch(queryUrl, {
       headers: {
@@ -502,7 +490,7 @@ async function loadAllComments(factIds) {
     }
 
     const comments = await res.json();
-    console.log("Raw response:", comments);
+    console.log("Fetched comments:", comments);
 
     // Process the comments
     factIds.forEach((factId) => {
@@ -517,6 +505,7 @@ async function loadAllComments(factIds) {
         const factComments = comments.filter(
           (c) => c.fact_id === parseInt(factId)
         );
+        console.log(`Comments for fact ${factId}:`, factComments);
 
         if (factComments.length > 0) {
           commentsSection.classList.remove("hidden");
@@ -530,11 +519,16 @@ async function loadAllComments(factIds) {
           factComments.forEach((comment) => {
             const commentElement = document.createElement("div");
             commentElement.className = "comment";
+            const voteEmoji =
+              comment.vote_type === VOTE_TYPES.UPVOTE ? "👍🏻" : "👎🏻";
             commentElement.innerHTML = `
+              <div class="comment-header">
+                <span class="vote-type">${voteEmoji}</span>
+                <span class="comment-date">Posted on: ${new Date(
+                  comment.created_at
+                ).toLocaleString()}</span>
+              </div>
               <p class="comment-text">${comment.comment}</p>
-              <span class="comment-date">Posted on: ${new Date(
-                comment.created_at
-              ).toLocaleString()}</span>
             `;
             commentsList.appendChild(commentElement);
           });
