@@ -94,7 +94,7 @@ function createFactsList(dataArray) {
           </button>
         </div>
       </div>
-      <div class="comments-section" data-fact-id="${fact.id}">
+      <div class="comments-section hidden" data-fact-id="${fact.id}">
         <div class="comments-list"></div>
       </div>
       <div class="comment-box">
@@ -221,12 +221,10 @@ async function submitVoteWithComment(factId, voteType, comment, button) {
         created_at: new Date().toISOString(),
       };
 
-      console.log("Sending comment data:", commentData);
+      console.log("Attempting to submit comment:", commentData);
 
       const baseUrl = config.supabaseUrl.replace("/rest/v1/facts", "");
       const commentsUrl = `${baseUrl}/rest/v1/fact_comments`;
-
-      console.log("Posting comment to URL:", commentsUrl);
 
       const commentRes = await fetch(commentsUrl, {
         method: "POST",
@@ -234,22 +232,34 @@ async function submitVoteWithComment(factId, voteType, comment, button) {
           apikey: config.supabaseKey,
           authorization: `Bearer ${config.supabaseKey}`,
           "Content-Type": "application/json",
-          Prefer: "return=minimal",
+          Prefer: "return=representation",
         },
         body: JSON.stringify(commentData),
       });
 
       if (!commentRes.ok) {
         const errorText = await commentRes.text();
-        console.error("Comment insertion failed:", errorText);
+        console.error("Comment submission failed:", errorText);
         console.error("Response status:", commentRes.status);
-        console.error(
-          "Response headers:",
-          Object.fromEntries(commentRes.headers)
-        );
+        throw new Error(`Failed to submit comment: ${errorText}`);
       } else {
-        console.log("Comment added successfully");
-        loadAllComments([factId]);
+        const savedComment = await commentRes.json();
+        console.log("Comment saved to database:", savedComment);
+
+        // Verify the comment exists immediately after saving
+        const verifyRes = await fetch(`${commentsUrl}?fact_id=eq.${factId}`, {
+          headers: {
+            apikey: config.supabaseKey,
+            authorization: `Bearer ${config.supabaseKey}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const verifyComments = await verifyRes.json();
+        console.log("Verification query results:", verifyComments);
+
+        // Reload comments
+        await loadAllComments([factId]);
       }
     }
 
@@ -260,7 +270,7 @@ async function submitVoteWithComment(factId, voteType, comment, button) {
     button.textContent = `${emoji} ${newCount}`;
   } catch (error) {
     console.error("Error in submitVoteWithComment:", error);
-    alert("There was an error updating the vote. Please try again.");
+    throw error;
   }
 }
 
@@ -468,12 +478,10 @@ async function loadAllComments(factIds) {
     const baseUrl = config.supabaseUrl.replace("/rest/v1/facts", "");
     const commentsUrl = `${baseUrl}/rest/v1/fact_comments`;
 
-    console.log("Fetching comments for fact IDs:", factIds);
-    console.log("Comments URL:", commentsUrl);
-
-    // Remove the order by clause since created_at is NULL
-    const queryUrl = `${commentsUrl}?fact_id=in.(${factIds.join(",")})`;
-    console.log("Full query URL:", queryUrl);
+    // Try a simpler query for a single fact ID first
+    const singleFactId = factIds[0];
+    const queryUrl = `${commentsUrl}?fact_id=eq.${singleFactId}`;
+    console.log("Trying simple query URL:", queryUrl);
 
     const res = await fetch(queryUrl, {
       headers: {
@@ -484,47 +492,59 @@ async function loadAllComments(factIds) {
       },
     });
 
+    console.log("Response status:", res.status);
+
     if (!res.ok) {
       const errorText = await res.text();
-      console.error("Failed to fetch comments:", errorText);
-      throw new Error("Failed to fetch comments");
+      console.error("Failed to fetch comments. Status:", res.status);
+      console.error("Error text:", errorText);
+      throw new Error(`Failed to fetch comments: ${errorText}`);
     }
 
     const comments = await res.json();
-    console.log("Fetched comments:", comments);
+    console.log("Raw response:", comments);
 
-    // Clear and update comments for each fact
+    // Process the comments
     factIds.forEach((factId) => {
       const commentsSection = document.querySelector(
-        `.comments-section[data-fact-id="${factId}"] .comments-list`
+        `.comments-section[data-fact-id="${factId}"]`
       );
       if (commentsSection) {
-        commentsSection.innerHTML = ""; // Clear existing comments
+        const commentsList = commentsSection.querySelector(".comments-list");
+        commentsList.innerHTML = ""; // Clear existing comments
 
         // Filter comments for this fact
         const factComments = comments.filter(
           (c) => c.fact_id === parseInt(factId)
         );
 
-        // Add comments
-        factComments.forEach((comment) => {
-          const commentElement = document.createElement("div");
-          commentElement.className = "comment";
-          commentElement.innerHTML = `
-            <p class="comment-text">${comment.comment}</p>
-            ${
-              comment.created_at
-                ? `<span class="comment-date">${new Date(
-                    comment.created_at
-                  ).toLocaleString()}</span>`
-                : ""
-            }
-          `;
-          commentsSection.appendChild(commentElement);
-        });
+        if (factComments.length > 0) {
+          commentsSection.classList.remove("hidden");
+
+          // Sort comments by date (newest first)
+          factComments.sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+          );
+
+          // Add comments
+          factComments.forEach((comment) => {
+            const commentElement = document.createElement("div");
+            commentElement.className = "comment";
+            commentElement.innerHTML = `
+              <p class="comment-text">${comment.comment}</p>
+              <span class="comment-date">Posted on: ${new Date(
+                comment.created_at
+              ).toLocaleString()}</span>
+            `;
+            commentsList.appendChild(commentElement);
+          });
+        } else {
+          commentsSection.classList.add("hidden");
+        }
       }
     });
   } catch (error) {
-    console.error("Error loading comments:", error);
+    console.error("Error in loadAllComments:", error);
+    console.error("Error stack:", error.stack);
   }
 }
