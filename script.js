@@ -331,7 +331,7 @@ form.addEventListener("submit", async function (e) {
 
   // Get the input values
   const text = textInput.value;
-  const source = sourceInput.value;
+  const source = sourceInput.value.trim();
   const category = categorySelect.value;
 
   // Basic validation
@@ -340,23 +340,28 @@ form.addEventListener("submit", async function (e) {
     return;
   }
 
-  // Basic URL validation - check if it's a valid URL format
-  if (!source.includes("http://") && !source.includes("https://")) {
+  // Basic URL validation - allow www. format as well
+  if (!source.match(/^(https?:\/\/|www\.)/i)) {
     alert(
-      "Please provide a valid source URL starting with http:// or https://"
+      "Please provide a valid website URL starting with www. or http:// or https://"
     );
     return;
   }
+
+  // If URL starts with www., add https:// to it
+  const formattedSource = source.startsWith("www.")
+    ? `https://${source}`
+    : source;
 
   if (!text || !source || !category) {
     alert("Please fill in all fields");
     return;
   }
 
-  // Create the new fact object
+  // Create the new fact object with formatted source
   const fact = {
     text,
-    source,
+    source: formattedSource,
     category,
     votesUp: 0,
     votesDown: 0,
@@ -528,7 +533,7 @@ async function loadAllComments(factIds) {
                   comment.created_at
                 ).toLocaleString()}</span>
               </div>
-              <p class="comment-text">${comment.comment}</p>
+              <p class="comment-text">${linkifyText(comment.comment)}</p>
             `;
             commentsList.appendChild(commentElement);
           });
@@ -541,4 +546,14 @@ async function loadAllComments(factIds) {
     console.error("Error in loadAllComments:", error);
     console.error("Error stack:", error.stack);
   }
+}
+
+// Add this helper function at the top of your file
+function linkifyText(text) {
+  // Regular expression to match URLs
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(
+    urlRegex,
+    (url) => `<a href="${url}" target="_blank" class="comment-link">${url}</a>`
+  );
 }
