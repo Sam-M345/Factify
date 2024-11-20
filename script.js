@@ -94,16 +94,16 @@ function createFactsList(dataArray) {
           </button>
         </div>
       </div>
-      <div class="comments-section hidden" data-fact-id="${fact.id}">
-        <h3 class="comments-title">🗣️ User Opinions</h3>
-        <div class="comments-list"></div>
-      </div>
       <div class="comment-box">
         <textarea class="comment-textarea" placeholder="Share your thoughts about this fact..."></textarea>
         <div class="comment-actions">
           <button class="comment-button cancel-comment">Cancel</button>
           <button class="comment-button submit-comment" data-vote-type="">Submit Vote</button>
         </div>
+      </div>
+      <div class="comments-section hidden" data-fact-id="${fact.id}">
+        <h3 class="comments-title">🗣️ User Opinions</h3>
+        <div class="comments-list"></div>
       </div>
     </li>`
   );
