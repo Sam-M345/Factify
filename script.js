@@ -60,8 +60,17 @@ const VOTE_TYPES = {
 
 function createFactsList(dataArray) {
   const htmlArr = dataArray.map(
-    (fact) => `<li class="fact">
-      <p>${fact.text}</p>
+    (fact) => `<li class="fact" id="fact-${fact.id}">
+      <div class="fact-header">
+        <p>${fact.text}</p>
+        <button class="share-button" data-fact-id="${
+          fact.id
+        }" title="Share this fact">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37061L8.08261 9.19813C7.54305 8.46815 6.6981 8 5.75 8C4.09315 8 2.75 9.34315 2.75 11C2.75 12.6569 4.09315 14 5.75 14C6.6981 14 7.54305 13.5319 8.08261 12.8019L15.0227 16.6294C15.0077 16.7508 15 16.8745 15 17C15 18.6569 16.3431 20 18 20C19.6569 20 21 18.6569 21 17C21 15.3431 19.6569 14 18 14C17.0519 14 16.207 14.4681 15.6674 15.1981L8.72732 11.3706C8.74232 11.2492 8.75 11.1255 8.75 11C8.75 10.8745 8.74232 10.7508 8.72732 10.6294L15.6674 6.80187C16.207 7.53185 17.0519 8 18 8Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
       <div class="fact-bottom-line">
         <div class="source-category-container">
           <a class="source" href="${fact.source}" target="_blank">(Source)</a>
@@ -113,6 +122,11 @@ function createFactsList(dataArray) {
   // Add event listeners for vote buttons and comment box interactions
   document.querySelectorAll(".vote-button").forEach((button) => {
     button.addEventListener("click", handleVote);
+  });
+
+  // Add event listeners for share buttons
+  document.querySelectorAll(".share-button").forEach((button) => {
+    button.addEventListener("click", handleShare);
   });
 
   // Load comments for each fact
@@ -264,10 +278,22 @@ async function submitVoteWithComment(factId, voteType, comment, button) {
 }
 
 // Functions
-async function loadFacts(category = "all") {
+async function loadFacts(category = "all", specificFactId = null) {
   try {
-    console.log("Loading facts for category:", category);
-    const res = await fetch(config.supabaseUrl, {
+    console.log(
+      "Loading facts. Category:",
+      category,
+      "Specific fact:",
+      specificFactId
+    );
+
+    // If we have a specific fact ID, modify the fetch URL
+    let fetchUrl = config.supabaseUrl;
+    if (specificFactId) {
+      fetchUrl += `?id=eq.${specificFactId}`;
+    }
+
+    const res = await fetch(fetchUrl, {
       headers: {
         apikey: config.supabaseKey,
         authorization: `Bearer ${config.supabaseKey}`,
@@ -280,26 +306,25 @@ async function loadFacts(category = "all") {
     const data = await res.json();
     console.log("Fetched data:", data);
 
-    // Filter the facts based on category
-    const filteredData =
-      category === "all"
-        ? data
-        : data.filter((fact) => fact.category.toLowerCase() === category);
-    console.log("Filtered data:", filteredData);
+    // If not loading a specific fact, apply category filter
+    let filteredData = data;
+    if (!specificFactId) {
+      filteredData =
+        category === "all"
+          ? data
+          : data.filter((fact) => fact.category.toLowerCase() === category);
+    }
 
-    // Get sort preference from localStorage or default to "upvoted"
-    const sortOption = localStorage.getItem("sortPreference") || "upvoted";
-
-    if (sortOption === "recent") {
-      filteredData.sort(
-        (a, b) => new Date(b.created_at) - new Date(a.created_at)
-      );
-    } else if (sortOption === "upvoted") {
-      filteredData.sort((a, b) => {
-        const votesA = a.votesUp || 0;
-        const votesB = b.votesUp || 0;
-        return votesB - votesA;
-      });
+    // Get sort preference from localStorage (only if not showing specific fact)
+    if (!specificFactId) {
+      const sortOption = localStorage.getItem("sortPreference") || "upvoted";
+      if (sortOption === "recent") {
+        filteredData.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+      } else if (sortOption === "upvoted") {
+        filteredData.sort((a, b) => (b.votesUp || 0) - (a.votesUp || 0));
+      }
     }
 
     // Create new fact elements
@@ -557,3 +582,78 @@ function linkifyText(text) {
     (url) => `<a href="${url}" target="_blank" class="comment-link">${url}</a>`
   );
 }
+
+// Add this new function to handle sharing
+async function handleShare(e) {
+  const button = e.target.closest(".share-button");
+  const factId = button.dataset.factId;
+  const shareUrl = `${window.location.origin}${window.location.pathname}#fact-${factId}`;
+
+  try {
+    if (navigator.share) {
+      // Use native sharing if available (mobile devices)
+      await navigator.share({
+        title: "Share this fact",
+        url: shareUrl,
+      });
+    } else {
+      // Fallback to clipboard copy
+      await navigator.clipboard.writeText(shareUrl);
+
+      // Show feedback to user
+      const tooltip = document.createElement("div");
+      tooltip.className = "share-tooltip";
+      tooltip.textContent = "Link copied!";
+      button.appendChild(tooltip);
+
+      // Remove tooltip after 2 seconds
+      setTimeout(() => {
+        tooltip.remove();
+      }, 2000);
+    }
+  } catch (error) {
+    console.error("Error sharing:", error);
+  }
+}
+
+// Add this function to handle direct links
+function handleFactLink() {
+  const hash = window.location.hash;
+  if (hash && hash.startsWith("#fact-")) {
+    const factId = hash.replace("#fact-", "");
+    loadFacts("all", factId); // Load only the specific fact
+
+    // Hide category buttons when showing a single fact
+    const aside = document.querySelector("aside");
+    aside.style.display = "none";
+
+    // Make the section take full width when aside is hidden
+    const mainSection = document.querySelector(".main");
+    mainSection.style.gridTemplateColumns = "1fr";
+
+    // Add a "Back to all facts" button
+    const backButton = document.createElement("button");
+    backButton.className = "btn btn-large btn-all-categories";
+    backButton.textContent = "← Back to all facts";
+    backButton.style.marginBottom = "16px";
+    backButton.onclick = () => {
+      window.location.hash = ""; // Clear the hash
+      aside.style.display = "block";
+      mainSection.style.gridTemplateColumns = "250px 1fr"; // Restore original layout
+      loadFacts("all"); // Load all facts
+      backButton.remove(); // Remove the back button
+    };
+
+    // Insert the back button before the facts list
+    factsList.parentNode.insertBefore(backButton, factsList);
+  }
+}
+
+// Update event listeners
+window.addEventListener("hashchange", handleFactLink);
+
+// Update the DOMContentLoaded listener
+document.addEventListener("DOMContentLoaded", () => {
+  btnAllCategories.classList.add("active");
+  handleFactLink(); // Replace scrollToFact with handleFactLink
+});

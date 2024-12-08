@@ -1390,3 +1390,92 @@ img {
   margin-bottom: 0.25rem;
   word-wrap: break-word;
 }
+
+.fact-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.share-button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #78716c;
+  border-radius: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.share-button:hover {
+  color: #fafaf9;
+  background-color: #44403c;
+}
+
+.share-tooltip {
+  position: absolute;
+  background-color: #1a1a1a;
+  color: #fafaf9;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.highlight {
+  animation: highlightFact 2s ease-out;
+}
+
+@keyframes highlightFact {
+  0%,
+  100% {
+    background-color: #44403c;
+  }
+  50% {
+    background-color: #57534e;
+  }
+}
+
+/* Style for back button */
+.btn-back {
+  background-color: #1a1a1a !important;
+  color: #fafaf9 !important;
+  border: 1px solid #333 !important;
+  margin-bottom: 16px !important;
+  width: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+  transition: all 0.2s !important;
+}
+
+.btn-back:hover {
+  background-color: #333 !important;
+  transform: translateX(-4px) !important;
+}
+
+@media (max-width: 768px) {
+  .btn-back {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
