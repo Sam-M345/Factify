@@ -591,25 +591,86 @@ async function handleShare(e) {
 
   try {
     if (navigator.share) {
-      // Use native sharing if available (mobile devices)
       await navigator.share({
         title: "Share this fact",
         url: shareUrl,
       });
     } else {
-      // Fallback to clipboard copy
-      await navigator.clipboard.writeText(shareUrl);
+      // Create custom share menu
+      const shareMenu = document.createElement("div");
+      shareMenu.className = "share-menu";
 
-      // Show feedback to user
-      const tooltip = document.createElement("div");
-      tooltip.className = "share-tooltip";
-      tooltip.textContent = "Link copied!";
-      button.appendChild(tooltip);
+      // Add Copy Link option first and make it stand out
+      const copyLink = document.createElement("button");
+      copyLink.className = "share-option copy-link";
+      copyLink.innerHTML = `
+        <span class="share-icon">🔗</span>
+        <span class="share-text"><strong>Copy link</strong></span>
+      `;
 
-      // Remove tooltip after 2 seconds
-      setTimeout(() => {
-        tooltip.remove();
-      }, 2000);
+      // Add divider after copy link
+      const divider = document.createElement("div");
+      divider.className = "share-divider";
+
+      // Add "Share link" header
+      const shareHeader = document.createElement("div");
+      shareHeader.className = "share-header";
+      shareHeader.textContent = "Share link";
+
+      // Add "Share with app" section header
+      const shareWithAppHeader = document.createElement("div");
+      shareWithAppHeader.className = "share-section-header";
+      shareWithAppHeader.textContent = "Share with app";
+
+      // Add other share options
+      const emailShare = document.createElement("button");
+      emailShare.className = "share-option";
+      emailShare.innerHTML = `
+        <span class="share-icon">✉️</span>
+        <span class="share-text">Email</span>
+      `;
+
+      // Add elements to menu in the new order
+      shareMenu.appendChild(copyLink);
+      shareMenu.appendChild(divider);
+      shareMenu.appendChild(shareHeader);
+      shareMenu.appendChild(shareWithAppHeader);
+      shareMenu.appendChild(emailShare);
+
+      // Position and show menu
+      button.appendChild(shareMenu);
+
+      // Handle copy link click
+      copyLink.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(shareUrl);
+        shareMenu.remove();
+
+        // Show feedback to user
+        const tooltip = document.createElement("div");
+        tooltip.className = "share-tooltip";
+        tooltip.textContent = "Link copied!";
+        button.appendChild(tooltip);
+
+        setTimeout(() => {
+          tooltip.remove();
+        }, 2000);
+      });
+
+      // Handle email share click
+      emailShare.addEventListener("click", () => {
+        window.location.href = `mailto:?subject=Check out this fact&body=${encodeURIComponent(
+          shareUrl
+        )}`;
+        shareMenu.remove();
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener("click", function closeMenu(e) {
+        if (!shareMenu.contains(e.target) && !button.contains(e.target)) {
+          shareMenu.remove();
+          document.removeEventListener("click", closeMenu);
+        }
+      });
     }
   } catch (error) {
     console.error("Error sharing:", error);
