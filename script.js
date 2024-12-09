@@ -304,7 +304,6 @@ async function loadFacts(category = "all", specificFactId = null) {
 
     if (!res.ok) throw new Error("Failed to fetch facts");
     const data = await res.json();
-    console.log("Fetched data:", data);
 
     // If not loading a specific fact, apply category filter
     let filteredData = data;
@@ -329,10 +328,12 @@ async function loadFacts(category = "all", specificFactId = null) {
 
     // Create new fact elements
     createFactsList(filteredData);
+    return true; // Return success
   } catch (error) {
     console.error("Error loading facts:", error);
     factsList.innerHTML =
       "<li>Error loading facts. Please try again later.</li>";
+    return false; // Return failure
   }
 }
 
@@ -678,43 +679,69 @@ async function handleShare(e) {
 }
 
 // Add this function to handle direct links
-function handleFactLink() {
+async function handleFactLink() {
   const hash = window.location.hash;
   if (hash && hash.startsWith("#fact-")) {
     const factId = hash.replace("#fact-", "");
-    loadFacts("all", factId); // Load only the specific fact
 
-    // Hide category buttons when showing a single fact
-    const aside = document.querySelector("aside");
-    aside.style.display = "none";
+    // Try loading the specific fact
+    const success = await loadFacts("all", factId);
 
-    // Make the section take full width when aside is hidden
-    const mainSection = document.querySelector(".main");
-    mainSection.style.gridTemplateColumns = "1fr";
+    if (success) {
+      // Hide category buttons when showing a single fact
+      const aside = document.querySelector("aside");
+      aside.style.display = "none";
 
-    // Add a "Back to all facts" button
-    const backButton = document.createElement("button");
-    backButton.className = "btn btn-large btn-all-categories";
-    backButton.textContent = "← Back to all facts";
-    backButton.style.marginBottom = "16px";
-    backButton.onclick = () => {
-      window.location.hash = ""; // Clear the hash
-      aside.style.display = "block";
-      mainSection.style.gridTemplateColumns = "250px 1fr"; // Restore original layout
-      loadFacts("all"); // Load all facts
-      backButton.remove(); // Remove the back button
-    };
+      // Make the section take full width when aside is hidden
+      const mainSection = document.querySelector(".main");
+      mainSection.style.gridTemplateColumns = "1fr";
 
-    // Insert the back button before the facts list
-    factsList.parentNode.insertBefore(backButton, factsList);
+      // Add a "Back to all facts" button
+      const backButton = document.createElement("button");
+      backButton.className = "btn btn-large btn-all-categories";
+      backButton.textContent = "← Back to all facts";
+      backButton.style.marginBottom = "16px";
+      backButton.onclick = () => {
+        window.location.hash = ""; // Clear the hash
+        aside.style.display = "block";
+        mainSection.style.gridTemplateColumns = "250px 1fr"; // Restore original layout
+        loadFacts("all"); // Load all facts
+        backButton.remove(); // Remove the back button
+      };
+
+      // Insert the back button before the facts list
+      factsList.parentNode.insertBefore(backButton, factsList);
+    } else {
+      // If loading the specific fact failed, try again after a short delay
+      setTimeout(() => {
+        handleFactLink();
+      }, 1000);
+    }
+  } else {
+    // Load all facts if no specific fact is requested
+    await loadFacts("all");
   }
 }
 
 // Update event listeners
 window.addEventListener("hashchange", handleFactLink);
 
-// Update the DOMContentLoaded listener
+// Update the DOMContentLoaded listener to handle initial load
 document.addEventListener("DOMContentLoaded", () => {
   btnAllCategories.classList.add("active");
-  handleFactLink(); // Replace scrollToFact with handleFactLink
+
+  // Add a small delay before initial load to ensure everything is ready
+  setTimeout(() => {
+    handleFactLink();
+  }, 100);
+});
+
+// Add this new listener to handle page loads and refreshes
+window.addEventListener("load", () => {
+  // If there's a hash in the URL, handle it after a short delay
+  if (window.location.hash) {
+    setTimeout(() => {
+      handleFactLink();
+    }, 100);
+  }
 });
