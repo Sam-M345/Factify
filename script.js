@@ -347,7 +347,7 @@ btnShare.addEventListener("click", function () {
     btnShare.textContent = "Close";
   } else {
     form.classList.add("hidden");
-    btnShare.textContent = "Share a fact";
+    btnShare.textContent = "Add a New Fact";
   }
 });
 
@@ -413,7 +413,7 @@ form.addEventListener("submit", async function (e) {
     sourceInput.value = "";
     categorySelect.value = "";
     form.classList.add("hidden");
-    btnShare.textContent = "Share a fact";
+    btnShare.textContent = "Add a New Fact";
 
     // Switch to "most recent" sort
     sortSelect.value = "recent";
