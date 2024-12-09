@@ -696,21 +696,25 @@ async function handleFactLink() {
       const mainSection = document.querySelector(".main");
       mainSection.style.gridTemplateColumns = "1fr";
 
-      // Add a "Back to all facts" button
-      const backButton = document.createElement("button");
-      backButton.className = "btn btn-large btn-all-categories";
-      backButton.textContent = "← Back to all facts";
-      backButton.style.marginBottom = "16px";
-      backButton.onclick = () => {
-        window.location.hash = ""; // Clear the hash
-        aside.style.display = "block";
-        mainSection.style.gridTemplateColumns = "250px 1fr"; // Restore original layout
-        loadFacts("all"); // Load all facts
-        backButton.remove(); // Remove the back button
-      };
+      // Check if back button already exists
+      if (!document.querySelector(".btn-back-to-facts")) {
+        // Add a "Back to all facts" button
+        const backButton = document.createElement("button");
+        backButton.className =
+          "btn btn-large btn-all-categories btn-back-to-facts"; // Added unique class
+        backButton.textContent = "← Back to all facts";
+        backButton.style.marginBottom = "16px";
+        backButton.onclick = () => {
+          window.location.hash = ""; // Clear the hash
+          aside.style.display = "block";
+          mainSection.style.gridTemplateColumns = "250px 1fr"; // Restore original layout
+          loadFacts("all"); // Load all facts
+          backButton.remove(); // Remove the back button
+        };
 
-      // Insert the back button before the facts list
-      factsList.parentNode.insertBefore(backButton, factsList);
+        // Insert the back button before the facts list
+        factsList.parentNode.insertBefore(backButton, factsList);
+      }
     } else {
       // If loading the specific fact failed, try again after a short delay
       setTimeout(() => {
@@ -720,6 +724,12 @@ async function handleFactLink() {
   } else {
     // Load all facts if no specific fact is requested
     await loadFacts("all");
+
+    // Remove back button if it exists when showing all facts
+    const existingBackButton = document.querySelector(".btn-back-to-facts");
+    if (existingBackButton) {
+      existingBackButton.remove();
+    }
   }
 }
 
